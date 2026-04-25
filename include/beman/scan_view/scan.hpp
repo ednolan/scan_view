@@ -348,13 +348,45 @@ class scan_view<V, F, T, K>::iterator {
   private:
     using Parent     = detail::maybe_const<Const, scan_view>; // exposition only
     using Base       = detail::maybe_const<Const, V>;         // exposition only
-    using ResultType = std::decay_t<
-        std::invoke_result_t<detail::maybe_const<Const, F>&, T, std::ranges::range_reference_t<Base>>>; // exposition
-                                                                                                        // only
+    using Func       = detail::maybe_const<Const, F>;         // exposition only
+    using ResultType = std::decay_t<                          // exposition only
+        std::invoke_result_t<Func&, T, std::ranges::range_reference_t<Base>>>;
+
+    struct Holder {                                                           // exposition only
+        std::ranges::sentinel_t<Base> end_ = std::ranges::sentinel_t<Base>(); // exposition only
+        detail::movable_box<T>        init_;                                  // exposition only
+        detail::movable_box<F>        fun_;                                   // exposition only
+    };
+    using HolderType = std::conditional_t<detail::tidy_func<F>, Holder, Parent*>;
 
     std::ranges::iterator_t<Base>   current_ = std::ranges::iterator_t<Base>(); // exposition only
-    Parent*                         parent_  = nullptr;                         // exposition only
+    HolderType                      parent_  = {};                              // exposition only
     detail::movable_box<ResultType> sum_;                                       // exposition only
+
+    constexpr std::ranges::sentinel_t<Base> get_end() const { // exposition only
+        if constexpr (detail::tidy_func<F>)
+            return parent_.end_;
+        else
+            return std::ranges::end(parent_->base_);
+    }
+    constexpr Func& get_fun() { // exposition only
+        if constexpr (detail::tidy_func<F>)
+            return *parent_.fun_;
+        else
+            return *parent_->fun_;
+    }
+    constexpr T& get_init() { // exposition only
+        if constexpr (detail::tidy_func<F>)
+            return *parent_.init_;
+        else
+            return *parent_->init_;
+    }
+    static constexpr HolderType init(Parent& parent) { // exposition only
+        if constexpr (detail::tidy_func<F>)
+            return {std::ranges::end(parent.base_), parent.init_};
+        else
+            return std::addressof(parent);
+    }
 
   public:
     using iterator_concept = std::input_iterator_tag;
@@ -365,12 +397,11 @@ class scan_view<V, F, T, K>::iterator {
         requires std::default_initializable<std::ranges::iterator_t<Base>>
     = default;
     constexpr iterator(Parent& parent, std::ranges::iterator_t<Base> current)
-        : current_{std::move(current)}, parent_{std::addressof(parent)} {
-        if (current_ == std::ranges::end(parent_->base_))
+        : current_{std::move(current)}, parent_{init(parent)} {
+        if (current_ == get_end())
             return;
         if constexpr (K == scan_view_kind::seeded) {
-            sum_ = detail::movable_box<ResultType>{std::in_place,
-                                                   std::invoke(*parent_->fun_, *parent_->init_, *current_)};
+            sum_ = detail::movable_box<ResultType>{std::in_place, std::invoke(get_fun(), get_init(), *current_)};
         } else {
             sum_ = detail::movable_box<ResultType>{std::in_place, *current_};
         }
@@ -385,25 +416,19 @@ class scan_view<V, F, T, K>::iterator {
     constexpr const value_type& operator*() const { return *sum_; }
 
     constexpr iterator& operator++() {
-        if (++current_ != std::ranges::end(parent_->base_)) {
-            sum_ = detail::movable_box<ResultType>{std::in_place,
-                                                   std::invoke(*parent_->fun_, std::move(*sum_), *current_)};
+        if (++current_ != get_end()) {
+            sum_ = detail::movable_box<ResultType>{std::in_place, std::invoke(get_fun(), std::move(*sum_), *current_)};
         }
         return *this;
     }
     constexpr void operator++(int) { ++*this; }
-
-    // Workaround for older versions of compilers
-    constexpr auto __get_base_end() const { return std::ranges::end(parent_->base_); }
 
     friend constexpr bool operator==(const iterator& x, const iterator& y)
         requires std::equality_comparable<std::ranges::iterator_t<Base>>
     {
         return x.current_ == y.current_;
     }
-    friend constexpr bool operator==(const iterator& x, std::default_sentinel_t) {
-        return x.current_ == x.__get_base_end();
-    }
+    friend constexpr bool operator==(const iterator& x, std::default_sentinel_t) { return x.current_ == x.get_end(); }
 };
 
 namespace detail {

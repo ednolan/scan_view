@@ -31,6 +31,19 @@ struct NonTrivialFunctor {
     constexpr int operator()(int a, int b) const { return a + b; }
 };
 
+struct MoveOnlyFunctor {
+    MoveOnlyFunctor()                                      = default;
+    MoveOnlyFunctor(const MoveOnlyFunctor&)                = delete;
+    MoveOnlyFunctor& operator=(const MoveOnlyFunctor&)     = delete;
+    MoveOnlyFunctor(MoveOnlyFunctor&&) noexcept            = default;
+    MoveOnlyFunctor& operator=(MoveOnlyFunctor&&) noexcept = default;
+    constexpr int    operator()(int a, const std::unique_ptr<int>& b) const { return a + *b; }
+};
+
+struct MoveOnlyNonTrivialFunctor : MoveOnlyFunctor {
+    int var_;
+};
+
 // Some basic examples of how transform_view might be used in the wild. This is a general
 // collection of sample algorithms and functions that try to mock general usage of
 // this view.
@@ -98,6 +111,18 @@ TEST(ScanView, NonConstIterable) {
     ASSERT_TRUE(std::ranges::equal(transformed2, expected2));
 }
 
+TEST(ScanView, Borrowed) {
+    std::vector<int>                              vec = {1, 2, 3, 4};
+    decltype(exe::scan(vec, std::plus{}).begin()) it;
+    {
+        auto transformed = exe::scan(vec, std::plus{});
+        it               = transformed.begin();
+    }
+    ASSERT_EQ(*it, 1);
+    ++it;
+    ASSERT_EQ(*it, 3);
+}
+
 TEST(ScanView, JoinArray) {
     int  a[]     = {1, 2, 3, 4};
     int  b[]     = {4, 3, 2, 1};
@@ -119,5 +144,20 @@ TEST(ScanView, MoveOnly) {
     auto out     = exe::scan(vec4, [](const auto& a, const auto& b) { return a + *b; }, 3);
     int  check[] = {8, 10, 20};
     ASSERT_TRUE(std::ranges::equal(out, check));
+
+    decltype(exe::scan(vec4, MoveOnlyFunctor{}, 3).begin()) it;
+    {
+        auto out2 = exe::scan(vec4, MoveOnlyFunctor{}, 3);
+        static_assert(std::ranges::borrowed_range<decltype(out2)>);
+        ASSERT_TRUE(std::ranges::equal(out2, check));
+        it = out2.begin();
+    }
+    ASSERT_EQ(*it, 8);
+    ++it;
+    ASSERT_EQ(*it, 10);
+
+    auto out3 = exe::scan(vec4, MoveOnlyNonTrivialFunctor{}, 3);
+    static_assert(!std::ranges::borrowed_range<decltype(out3)>);
+    ASSERT_TRUE(std::ranges::equal(out3, check));
 }
 #endif
