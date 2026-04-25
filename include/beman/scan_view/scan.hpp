@@ -357,7 +357,7 @@ class scan_view<V, F, T, K>::iterator {
         detail::movable_box<F>        fun_;                                   // exposition only
         detail::movable_box<T>        init_;                                  // exposition only
     };
-    using HolderType = std::conditional_t<detail::tidy_func<F>, Holder, Parent*>;
+    using HolderType = std::conditional_t<detail::tidy_func<F>, Holder, Parent*>; // exposition only
 
     std::ranges::iterator_t<Base>   current_ = std::ranges::iterator_t<Base>(); // exposition only
     HolderType                      parent_  = {};                              // exposition only
@@ -408,7 +408,7 @@ class scan_view<V, F, T, K>::iterator {
     }
     constexpr iterator(iterator<!Const> i)
         requires Const && std::convertible_to<std::ranges::iterator_t<V>, std::ranges::iterator_t<Base>>
-        : current_{std::move(i.current_)}, parent_{i.parent_}, sum_{std::move(i.sum_)} {}
+        : current_{std::move(i.current_)}, parent_{std::move(i.parent_)}, sum_{std::move(i.sum_)} {}
 
     constexpr const std::ranges::iterator_t<Base>& base() const& noexcept { return current_; }
     constexpr std::ranges::iterator_t<Base>        base() && { return std::move(current_); }
