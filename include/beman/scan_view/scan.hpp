@@ -354,8 +354,8 @@ class scan_view<V, F, T, K>::iterator {
 
     struct Holder {                                                           // exposition only
         std::ranges::sentinel_t<Base> end_ = std::ranges::sentinel_t<Base>(); // exposition only
-        detail::movable_box<T>        init_;                                  // exposition only
         detail::movable_box<F>        fun_;                                   // exposition only
+        detail::movable_box<T>        init_;                                  // exposition only
     };
     using HolderType = std::conditional_t<detail::tidy_func<F>, Holder, Parent*>;
 
@@ -383,7 +383,7 @@ class scan_view<V, F, T, K>::iterator {
     }
     static constexpr HolderType init(Parent& parent) { // exposition only
         if constexpr (detail::tidy_func<F>)
-            return {std::ranges::end(parent.base_), parent.init_};
+            return {std::ranges::end(parent.base_), detail::movable_box<F>{std::in_place}, parent.init_};
         else
             return std::addressof(parent);
     }
