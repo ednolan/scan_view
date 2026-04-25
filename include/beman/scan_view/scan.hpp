@@ -391,14 +391,7 @@ class scan_view<V, F, T, K>::iterator {
         }
         return *this;
     }
-    constexpr void     operator++(int) { ++*this; }
-    constexpr iterator operator++(int)
-        requires std::ranges::forward_range<Base>
-    {
-        auto tmp = *this;
-        ++*this;
-        return tmp;
-    }
+    constexpr void operator++(int) { ++*this; }
 
     // Workaround for older versions of compilers
     constexpr auto __get_base_end() const { return std::ranges::end(parent_->base_); }
