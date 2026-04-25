@@ -29,10 +29,16 @@ repos:
     # Markdown linting
     # Config file: .markdownlint.yaml
     # Commented out to disable this by default. Uncomment to enable markdown linting.
-  # - repo: https://github.com/igorshubovych/markdownlint-cli
-  #   rev: v0.42.0
-  #   hooks:
-  #   - id: markdownlint
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
+    hooks:
+    - id: markdownlint
+      exclude: ^infra/.*
+
+  - repo: https://github.com/bemanproject/beman-tidy
+    rev: v0.3.1
+    hooks:
+    - id: beman-tidy
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1

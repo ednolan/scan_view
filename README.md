@@ -4,19 +4,30 @@
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
 
-<!-- markdownlint-disable-next-line line-length -->
-![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg) ![Continuous Integration Tests](https://github.com/bemanproject/scan_view/actions/workflows/ci_tests.yml/badge.svg) ![Lint Check (pre-commit)](https://github.com/bemanproject/scan_view/actions/workflows/pre-commit.yml/badge.svg) [![Coverage](https://coveralls.io/repos/github/bemanproject/scan_view/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/scan_view?branch=main) ![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
+![Library Status](https://raw.githubusercontent.com/bemanproject/beman/refs/heads/main/images/badges/beman_badge-beman_library_under_development.svg)
+![Continuous Integration Tests](https://github.com/bemanproject/scan_view/actions/workflows/ci_tests.yml/badge.svg)
+![Lint Check (pre-commit)](https://github.com/bemanproject/scan_view/actions/workflows/pre-commit.yml/badge.svg)
+[![Coverage](https://coveralls.io/repos/github/bemanproject/scan_view/badge.svg?branch=main)](https://coveralls.io/github/bemanproject/scan_view?branch=main)
+![Standard Target](https://github.com/bemanproject/beman/blob/main/images/badges/cpp29.svg)
+[![Compiler Explorer Example](https://img.shields.io/badge/Try%20it%20on%20Compiler%20Explorer-grey?logo=compilerexplorer&logoColor=67c52a)](https://godbolt.org/z/qMvEhWKf9)
 
 **Implements**: `std::views::scan` proposed in [`views::scan` (P3351R4)](https://wg21.link/P3351R4).
 
 **Difference from the paper**:
+
 - Implemented `reserve_hint` are hidden behind a feature-test macro.
 
 **Status**: [Under development and not yet ready for production use.](https://github.com/bemanproject/beman/blob/main/docs/beman_library_maturity_model.md#under-development-and-not-yet-ready-for-production-use)
 
+## License
+
+beman.scan_view is licensed under the Apache License v2.0 with LLVM Exceptions.
+
 ## Usage
 
-`views::scan` is a range adaptor that takes a range and a function that takes the current element and the current state as parameters. Basically, `views::scan` is a lazy view version of `std::inclusive_scan`, or `views::transform` with a stateful function.
+`views::scan` is a range adaptor that takes a range and a function that
+takes the current element and the current state as parameters.
+Basically, `views::scan` is a lazy view version of `std::inclusive_scan`, or `views::transform` with a stateful function.
 
 ```cpp
 #include <functional>
@@ -53,9 +64,9 @@ Full runnable examples can be found in [`examples/`](examples/).
 
 This project requires at least the following to build:
 
-* C++20
-* CMake 3.25
-* (Test Only) GoogleTest
+- C++20
+- CMake 3.25
+- (Test Only) GoogleTest
 
 You can disable building tests by setting cmake option
 [`BEMAN_SCAN_VIEW_BUILD_TESTS`](#beman_scan_view_build_tests) to `OFF`
