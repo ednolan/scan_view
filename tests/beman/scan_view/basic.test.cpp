@@ -37,7 +37,7 @@ struct MoveOnlyFunctor {
     MoveOnlyFunctor& operator=(const MoveOnlyFunctor&)     = delete;
     MoveOnlyFunctor(MoveOnlyFunctor&&) noexcept            = default;
     MoveOnlyFunctor& operator=(MoveOnlyFunctor&&) noexcept = default;
-    constexpr int    operator()(int a, const std::unique_ptr<int>& b) const { return a + *b; }
+    int              operator()(int a, const std::unique_ptr<int>& b) const { return a + *b; }
 };
 
 struct MoveOnlyNonTrivialFunctor : MoveOnlyFunctor {
@@ -61,6 +61,17 @@ TEST(ScanView, General) {
     ASSERT_TRUE(std::ranges::equal(transformed2, expected2));
     const auto& ct2 = transformed2;
     ASSERT_TRUE(std::ranges::equal(ct2, expected2));
+}
+
+TEST(ScanView, Constexpr) {
+    static constexpr std::array<int, 4> arr         = {1, 2, 3, 4};
+    static constexpr auto               transformed = exe::scan(arr, std::plus{});
+    static constexpr std::array<int, 4> expected    = {1, 3, 6, 10};
+    static_assert(std::ranges::equal(transformed, expected));
+
+    static constexpr auto               transformed2 = exe::scan(arr, std::plus{}, 10);
+    static constexpr std::array<int, 4> expected2    = {11, 13, 16, 20};
+    static_assert(std::ranges::equal(transformed2, expected2));
 }
 
 TEST(ScanView, Properties) {
