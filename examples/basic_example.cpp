@@ -3,7 +3,7 @@
 #include <vector>
 
 #if __cpp_lib_print >= 202207L
-#include <print>
+    #include <print>
 #endif
 
 #include <beman/scan_view/scan.hpp>
